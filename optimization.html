@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Waste Classification Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+    }
+    /* Simple styles for the map zones */
+    .zone {
+      fill: #3b82f6;
+      fill-opacity: 0.3;
+      stroke: #2563eb;
+      stroke-width: 2;
+      cursor: pointer;
+      transition: fill-opacity 0.3s ease;
+    }
+    .zone:hover {
+      fill-opacity: 0.6;
+    }
+    .zone-label {
+      font-size: 14px;
+      font-weight: 700;
+      fill: #1e40af;
+      pointer-events: none;
+    }
+    .zone-data {
+      font-size: 16px;
+      font-weight: 700;
+      pointer-events: none;
+    }
+    .zone-data.normal {
+      fill: #1e40af;
+    }
+    .zone-data.limit {
+      fill: red;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-6">
+  <header class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-800">Waste Classification Dashboard</h1>
+    <p class="text-gray-600 mt-1">Real-time waste classification results and zone map</p>
+  </header>
+
+  <main class="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <!-- Waste Classification Results -->
+    <section class="bg-white rounded-lg shadow p-6">
+      <h2 class="text-xl font-semibold mb-6 flex items-center">
+        <i class="fas fa-recycle mr-2 text-green-600"></i> Waste Classification Results
+      </h2>
+      <div id="classification-results" class="space-y-6">
+        <div class="flex items-center justify-between bg-green-50 rounded p-4 shadow-sm">
+          <div class="flex items-center space-x-3">
+            <i class="fas fa-leaf text-green-600 text-2xl"></i>
+            <span class="text-lg font-semibold text-gray-700">Biodegradable</span>
+          </div>
+          <span id="biodegradable-count" class="text-xl font-bold text-green-700">0%</span>
+        </div>
+        <div class="flex items-center justify-between bg-blue-50 rounded p-4 shadow-sm">
+          <div class="flex items-center space-x-3">
+            <i class="fas fa-recycle text-blue-600 text-2xl"></i>
+            <span class="text-lg font-semibold text-gray-700">Recyclable</span>
+          </div>
+          <span id="recyclable-count" class="text-xl font-bold text-blue-700">0%</span>
+        </div>
+        <div class="flex items-center justify-between bg-red-50 rounded p-4 shadow-sm">
+          <div class="flex items-center space-x-3">
+            <i class="fas fa-trash-alt text-red-600 text-2xl"></i>
+            <span class="text-lg font-semibold text-gray-700">Non Recyclable</span>
+          </div>
+          <span id="non-recyclable-count" class="text-xl font-bold text-red-700">0%</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Map Section -->
+    <section class="bg-white rounded-lg shadow p-6 overflow-auto">
+      <h2 class="text-xl font-semibold mb-6 flex items-center">
+        <i class="fas fa-map-marker-alt mr-2 text-indigo-600"></i> Zone Map
+      </h2>
+      <svg viewBox="0 0 400 400" class="w-full h-auto" aria-label="Map of zones">
+        <!-- Example zones as rectangles -->
+        <rect class="zone" x="20" y="20" width="100" height="80" />
+        <text x="70" y="65" class="zone-label" text-anchor="middle" dominant-baseline="middle">A</text>
+        <text id="zoneA-data" class="zone-data normal" x="70" y="115" text-anchor="middle" dominant-baseline="middle"></text>
+
+        <rect class="zone" x="140" y="20" width="100" height="80" />
+        <text x="190" y="65" class="zone-label" text-anchor="middle" dominant-baseline="middle">B</text>
+        <text id="zoneB-data" class="zone-data normal" x="190" y="115" text-anchor="middle" dominant-baseline="middle"></text>
+
+        <rect class="zone" x="260" y="20" width="100" height="80" />
+        <text x="310" y="65" class="zone-label" text-anchor="middle" dominant-baseline="middle">C</text>
+        <text id="zoneC-data" class="zone-data normal" x="310" y="115" text-anchor="middle" dominant-baseline="middle"></text>
+
+        <rect class="zone" x="20" y="140" width="100" height="80" />
+        <text x="70" y="185" class="zone-label" text-anchor="middle" dominant-baseline="middle">D</text>
+        <text id="zoneD-data" class="zone-data normal" x="70" y="235" text-anchor="middle" dominant-baseline="middle"></text>
+
+        <rect class="zone" x="140" y="140" width="100" height="80" />
+        <text x="190" y="185" class="zone-label" text-anchor="middle" dominant-baseline="middle">E</text>
+        <text id="zoneE-data" class="zone-data normal" x="190" y="235" text-anchor="middle" dominant-baseline="middle"></text>
+
+        <rect class="zone" x="260" y="140" width="100" height="80" />
+        <text x="310" y="185" class="zone-label" text-anchor="middle" dominant-baseline="middle">F</text>
+        <text id="zoneF-data" class="zone-data normal" x="310" y="235" text-anchor="middle" dominant-baseline="middle"></text>
+      </svg>
+    </section>
+  </main>
+
+  <script>
+    // Placeholder for real-time data update from IoT sensors
+    // This function should be replaced with actual data receiving logic (e.g., WebSocket or API polling)
+    function updateClassificationCounts(data) {
+      const biodegradableEl = document.getElementById('biodegradable-count');
+      const recyclableEl = document.getElementById('recyclable-count');
+      const nonRecyclableEl = document.getElementById('non-recyclable-count');
+
+      biodegradableEl.textContent = `${data.biodegradable || 0}%`;
+      recyclableEl.textContent = `${data.recyclable || 0}%`;
+      nonRecyclableEl.textContent = `${data.nonRecyclable || 0}%`;
+
+      biodegradableEl.classList.toggle('limit', (data.biodegradable || 0) >= 100);
+      recyclableEl.classList.toggle('limit', (data.recyclable || 0) >= 100);
+      nonRecyclableEl.classList.toggle('limit', (data.nonRecyclable || 0) >= 100);
+    }
+
+    // Generate random value between 0 and 100
+    function generateRandomValue() {
+      return Math.floor(Math.random() * 101);
+    }
+
+    // Update zone data with fluctuating values and color change at limit
+    function updateZoneData(zoneData) {
+      for (const zone in zoneData) {
+        if (zoneData.hasOwnProperty(zone)) {
+          const data = zoneData[zone];
+          const total = Math.min(100, (data.biodegradable || 0) + (data.recyclable || 0) + (data.nonRecyclable || 0));
+          const el = document.getElementById(`zone${zone}-data`);
+          if (el) {
+            el.textContent = `${total.toFixed(0)}%`;
+            if (total >= 100) {
+              el.classList.remove('normal');
+              el.classList.add('limit');
+            } else {
+              el.classList.remove('limit');
+              el.classList.add('normal');
+            }
+          }
+        }
+      }
+    }
+
+    // Example simulation of receiving fluctuating data every 250 milliseconds
+    setInterval(() => {
+      const simulatedData = {
+        biodegradable: generateRandomValue(),
+        recyclable: generateRandomValue(),
+        nonRecyclable: generateRandomValue()
+      };
+      updateClassificationCounts(simulatedData);
+
+      const simulatedZoneData = {
+        A: {
+          biodegradable: generateRandomValue(),
+          recyclable: generateRandomValue(),
+          nonRecyclable: generateRandomValue()
+        },
+        B: {
+          biodegradable: generateRandomValue(),
+          recyclable: generateRandomValue(),
+          nonRecyclable: generateRandomValue()
+        },
+        C: {
+          biodegradable: generateRandomValue(),
+          recyclable: generateRandomValue(),
+          nonRecyclable: generateRandomValue()
+        },
+        D: {
+          biodegradable: generateRandomValue(),
+          recyclable: generateRandomValue(),
+          nonRecyclable: generateRandomValue()
+        },
+        E: {
+          biodegradable: generateRandomValue(),
+          recyclable: generateRandomValue(),
+          nonRecyclable: generateRandomValue()
+        },
+        F: {
+          biodegradable: generateRandomValue(),
+          recyclable: generateRandomValue(),
+          nonRecyclable: generateRandomValue()
+        }
+      };
+      updateZoneData(simulatedZoneData);
+    }, 250);
+
+    // Initial load with zero counts
+    updateClassificationCounts({ biodegradable: 0, recyclable: 0, nonRecyclable: 0 });
+    updateZoneData({
+      A: { biodegradable: 0, recyclable: 0, nonRecyclable: 0 },
+      B: { biodegradable: 0, recyclable: 0, nonRecyclable: 0 },
+      C: { biodegradable: 0, recyclable: 0, nonRecyclable: 0 },
+      D: { biodegradable: 0, recyclable: 0, nonRecyclable: 0 },
+      E: { biodegradable: 0, recyclable: 0, nonRecyclable: 0 },
+      F: { biodegradable: 0, recyclable: 0, nonRecyclable: 0 }
+    });
+  </script>
+</body>
+</html>
